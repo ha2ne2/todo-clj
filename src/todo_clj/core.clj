@@ -1,16 +1,19 @@
 (ns todo-clj.core
-  (:require [ring.adapter.jetty :as server]))
+  (:require [compojure.core :refer [routes]]
+            [ring.adapter.jetty :as server]
+            [todo-clj.handler.main :refer [main-routes]]
+            [todo-clj.handler.todo :refer [todo-routes]]))
 
 (defonce server (atom nil))
 
-(defn handler [req]
-  {:status 200
-   :headers {"Content-Type" "text/plain"}
-   :body "Hello, world"})
+(def app
+  (routes
+   todo-routes
+   main-routes))
 
 (defn start-server []
   (when-not @server
-    (reset! server (server/run-jetty handler {:port 3000 :join? false}))))
+    (reset! server (server/run-jetty #'app {:port 3000 :join? false}))))
 
 (defn stop-server []
   (when @server
@@ -21,8 +24,3 @@
   (when @server
     (stop-server)
     (start-server)))
-
-;; (defn foo
-;;   "I don't do a whole lot."
-;;   [x]
-;;   (println x "Hello, World!"))
