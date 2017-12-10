@@ -1,32 +1,46 @@
 (ns todo-clj.handler.todo
   (:require [compojure.core :refer [defroutes context GET POST]]
+            [todo-clj.db.todo :as todo]
             [todo-clj.util.response :as res]
             [todo-clj.view.todo :as view]))
 
-(def todo-list
-  [{:title "朝ごはんを作る"}
-   {:title "燃えるゴミを出す"}
-   {:title "卵を買って帰る"}
-   {:title "お風呂を洗う"}])
-
-;; (defn todo-index-view [req]
-;;   `("<h1>TODO 一覧</h1>"
-;;     "<ul>"
-;;     ~@(for [{:keys [title]} todo-list]
-;;         (str "<li>" title "</li>"))
-;;     "</ul>"))
-
 (defn todo-index [req]
-  (-> (view/todo-index-view req todo-list)
+  (let [todo-list (todo/find-todo-all)]
+    (-> (view/todo-index-view req todo-list)
+        res/response
+        res/html)))
+
+(defn todo-new [req]
+  (-> (view/todo-new-view req)
       res/response
       res/html))
 
-(defn todo-new [req] "TODO new")
-(defn todo-new-post [req] "TODO new post")
+(defn todo-new-post [{:as req :keys [params]}]
+  (if-let [todo (first (todo/save-todo (:title params)))]
+    (-> (res/redirect (str "/todo/" (:id todo)))
+        (assoc :flash {:msg "TODO を正常に追加しました。"})
+        res/html)))
+
+(defn todo-show [{:as req :keys [params]}]
+  (if-let [todo (todo/find-first-todo (Long/parseLong (:todo-id params)))]
+    (-> (view/todo-show-view req todo)
+        res/response
+        res/html)))
+
+(defn todo-edit [{:as req :keys [params]}]
+  (if-let [todo (todo/find-first-todo (Long/parseLong (:todo-id params)))]
+    (-> (view/todo-edit-view req todo)
+        res/response
+        res/html)))
+
+(defn todo-edit-post [{:as req :keys [params]}]
+  (let [todo-id (Long/parseLong (:todo-id params))]
+    (if (pos? (first (todo/update-todo todo-id (:title params))))
+      (-> (res/redirect (str "/todo/" todo-id))
+          (assoc :flash {:msg "TODOを正常に更新しました。"})
+          res/html))))
+
 (defn todo-search [req] "TODO search")
-(defn todo-show [req] "TODO show")
-(defn todo-edit [req] "TODO edit")
-(defn todo-edit-post [req] "TODO edit post")
 (defn todo-delete [req] "TODO delete")
 (defn todo-delete-post [req] "TODO delete post")
 
