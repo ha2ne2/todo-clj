@@ -9,8 +9,16 @@
                  [hiccup "1.0.5"]
                  [environ "1.0.1"]
                  [org.clojure/java.jdbc "0.4.2"]
-                 [org.postgresql/postgresql "9.4-1205-jdbc42"]]
+                 [org.postgresql/postgresql "9.4-1205-jdbc42"]
+                 [bouncer "0.3.3"]
+                 [ring/ring-defaults "0.1.5"]
+                 [metosin/ring-http-response "0.6.5"]
+                 [slingshot "0.12.2"]
+                 [potemkin "0.4.1"]]
   :plugins [[lein-environ "1.0.1"]]
+;;  :uberjar-name "todo-clj.jar"
   :profiles
   {:dev {:dependencies [[prone "0.8.2"]]
-         :env {:dev true}}})
+         :env {:dev true}}
+   :uberjar {:aot :all
+            :main todo-clj.main}})
