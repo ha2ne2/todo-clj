@@ -10,13 +10,18 @@
            msg v]
        [:li.error-message msg])]))
 
-(defn todo-index-view [req todo-list]
+(defn todo-index-view [req unfinished-list finished-list]
   (->> [:section.card
         (when-let [{:keys [msg]} (:flash req)]
           [:div.alert.alert-success [:strong msg]])
+        [:a.wide-link {:href (str "/todo/new")} "TODOの追加"]
         [:h2 "TODO 一覧"]
         [:ul
-         (for [{:keys [id title]} todo-list]
+         (for [{:keys [id title]} unfinished-list]
+           [:li [:a {:href (str "/todo/" id)} title]])]
+        [:h2 "完了一覧"]
+        [:ul
+         (for [{:keys [id title]} finished-list]
            [:li [:a {:href (str "/todo/" id)} title]])]]
        (layout/common req)))
 
@@ -37,6 +42,17 @@
           (when-let [{:keys [msg]} (:flash req)]
             [:div.alert.alert-success [:strong msg]])
           [:h2 (:title todo)]
+
+          (if (:finished todo)
+            (hf/form-to
+             [:post (str "/todo/" todo-id "/unfinish")]
+             (anti-forgery-field)
+             [:button.bg-red "未完了"])
+            (hf/form-to
+             [:post (str "/todo/" todo-id "/finish")]
+             (anti-forgery-field)
+             [:button.bg-blue "完了"]))
+          [:br]
           [:a.wide-link {:href (str "/todo/" todo-id "/edit")} "修正する"]
           [:a.wide-link {:href (str "/todo/" todo-id "/delete")} "削除する"]]
          (layout/common req))))

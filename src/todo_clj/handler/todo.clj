@@ -9,8 +9,9 @@
 (def todo-validator {:title [[v/required :message "TODO を入力してください"]]})
 
 (defn todo-index [req]
-  (let [todo-list (todo/find-todo-all)]
-    (-> (view/todo-index-view req todo-list)
+  (let [unfinished-list (todo/find-unfinished)
+        finished-list (todo/find-finished)]
+    (-> (view/todo-index-view req unfinished-list finished-list)
         res/ok
         res/html)))
 
@@ -67,6 +68,22 @@
           res/html)
       (res/conflict!))))
 
+(defn todo-finish-post [{:as req :keys [params]}]
+  (let [todo-id (Long/parseLong (:todo-id params))]
+    (if (pos? (first (todo/finish-todo todo-id)))
+      (-> (res/found "/todo")
+          (assoc :flash {:msg "TODO の完了処理が正常に行われました"})
+          res/html)
+      (res/conflict!))))
+
+(defn todo-unfinish-post [{:as req :keys [params]}]
+  (let [todo-id (Long/parseLong (:todo-id params))]
+    (if (pos? (first (todo/unfinish-todo todo-id)))
+      (-> (res/found "/todo")
+          (assoc :flash {:msg "TODO の未完了が正常に行われました"})
+          res/html)
+      (res/conflict!))))
+
 (defn todo-search [req] "TODO search")
 
 (defroutes todo-routes
@@ -77,6 +94,8 @@
     (GET "/search" _ todo-search)
     (context "/:todo-id" _
       (GET "/" _ todo-show)
+      (POST "/finish" _ todo-finish-post)
+      (POST "/unfinish" _ todo-unfinish-post)
       (GET "/edit" _ todo-edit)
       (POST "/edit" _ todo-edit-post)
       (GET "/delete" _ todo-delete)
